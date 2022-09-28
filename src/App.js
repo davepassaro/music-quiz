@@ -1,25 +1,74 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+import React, { useState, useEffect, useContext } from "react";
+import Table from "./Table";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { Home } from "./Home";
+import Navbar from "./Navbar";
+import Quiz from "./Quiz";
+const FilterContext = React.createContext([]);
+
+function useContextState() {
+  const context = useContext(FilterContext);
+  if (context === undefined) {
+    throw new Error("context must be used within a Provider");
+  }
+  return context;
+}
 
 function App() {
+  const [toggleTable, setToggleTable] = React.useState(false);
+  const [tableOneIndex, setTableOneIndex] = useState({ start: 1, end: 2 });
+  const [tableTwoIndex, setTableTwoIndex] = useState({ start: 1, end: 2 });
+  const [APIData, setAPIData] = useState();
+
+  useEffect(() => {
+    // Fetch on app start
+    (async function () {
+      try {
+        const response = await fetch(
+          "https://jsonplaceholder.typicode.com/todos"
+        );
+        const json = await response.json();
+        setAPIData(json);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+      <Router>
+        <Navbar />
+        <FilterContext.Provider
+          value={[
+            tableOneIndex,
+            setTableOneIndex,
+            tableTwoIndex,
+            setTableTwoIndex,
+            APIData,
+            setAPIData,
+            toggleTable,
+          ]}
         >
-          Learn React
-        </a>
-      </header>
+          <Switch>
+            <Route exact path="/">
+              <Home />
+            </Route>
+            <Route exact path="/table/1">
+              <Table />
+            </Route>
+            <Route exact path="/table/2">
+              <Table />
+            </Route>
+            <Route exact path="/musicQuiz">
+              <Quiz />
+            </Route>
+          </Switch>
+        </FilterContext.Provider>
+      </Router>
     </div>
   );
 }
 
-export default App;
+export { App, useContextState };
